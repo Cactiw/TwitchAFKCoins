@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('fs.promises')
 const puppeteer = require('puppeteer-core');
 const dayjs = require('dayjs');
 const cheerio = require('cheerio');
@@ -12,6 +13,7 @@ var cookie = null;
 var streamers = null;
 // ========================================== CONFIG SECTION =================================================================
 const configPath = './config.json'
+const logPath = './logs.log'
 const screenshotFolder = './screenshots/';
 const baseUrl = 'https://www.twitch.tv/';
 const userAgent = (process.env.userAgent || 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36');
@@ -30,11 +32,12 @@ const showBrowser = false; // false state equ headless mode;
 const proxy = (process.env.proxy || ""); // "ip:port" By https://github.com/Jan710
 const proxyAuth = (process.env.proxyAuth || "");
 
-const browserScreenshot = (process.env.browserScreenshot || false);
+const browserScreenshot = true;//(process.env.browserScreenshot || false);
 
 const browserClean = 1;
 const browserCleanUnit = 'hour';
 
+var channel = '';
 var browserConfig = {
   headless: !showBrowser,
   args: [
@@ -57,9 +60,9 @@ const streamPauseQuery = 'button[data-a-target="player-play-pause-button"]';
 const streamSettingsQuery = '[data-a-target="player-settings-button"]';
 const streamQualitySettingQuery = '[data-a-target="player-settings-menu-item-quality"]';
 const streamQualityQuery = 'input[data-a-target="tw-radio"]';
+const streamCoinsChestQuery = 'button[class="tw-button tw-button--success tw-interactive"]';
+const streamCoins = '[data-test-selector="balance-string"]';
 // ========================================== CONFIG SECTION =================================================================
-
-
 
 async function viewRandomPage(browser, page) {
   var streamer_last_refresh = dayjs().add(streamerListRefresh, streamerListRefreshUnit);
@@ -79,11 +82,12 @@ async function viewRandomPage(browser, page) {
         streamer_last_refresh = dayjs().add(streamerListRefresh, streamerListRefreshUnit); //https://github.com/D3vl0per/Valorant-watcher/issues/25
       }
 
-      let watch = streamers[getRandomInt(0, streamers.length - 1)]; //https://github.com/D3vl0per/Valorant-watcher/issues/27
-      var sleep = getRandomInt(minWatching, maxWatching) * 60000; //Set watuching timer
+      let watch = channel;//streamers[getRandomInt(0, streamers.length - 1)]; //https://github.com/D3vl0per/Valorant-watcher/issues/27
+      var sleep = getRandomInt(minWatching, maxWatching) * 60000; //Set watching timer
 
       console.log('\n🔗 Now watching streamer: ', baseUrl + watch);
 
+      await page.setViewport({ width: 1366, height: 768}); // to see the chat
       await page.goto(baseUrl + watch, {
         "waitUntil": "networkidle0"
       }); //https://github.com/puppeteer/puppeteer/blob/master/docs/api.md#pagegobackoptions
@@ -136,6 +140,8 @@ async function viewRandomPage(browser, page) {
       console.log('🕒 Time: ' + dayjs().format('HH:mm:ss'));
       console.log('💤 Watching stream for ' + sleep / 60000 + ' minutes\n');
 
+      await chest(page, watch, 5000);
+
       await page.waitFor(sleep);
     } catch (e) {
       console.log('🤬 Error: ', e);
@@ -164,12 +170,11 @@ async function readLoginData() {
 
     if (fs.existsSync(configPath)) {
       console.log('✅ Json config found!');
-
-      let configFile = JSON.parse(fs.readFileSync(configPath, 'utf8'))
-
+      let configFile = JSON.parse(fs.readFileSync(configPath, 'utf8'));
       if (proxy) browserConfig.args.push('--proxy-server=' + proxy);
       browserConfig.executablePath = configFile.exec;
       cookie[0].value = configFile.token;
+      channel = configFile.channel;
 
       return cookie;
     } else if (process.env.token) {
@@ -194,6 +199,7 @@ async function readLoginData() {
       if (proxy) browserConfig.args[6] = '--proxy-server=' + proxy;
       browserConfig.executablePath = input.exec;
       cookie[0].value = input.token;
+      stream = input.channel;
 
       return cookie;
     }
@@ -203,7 +209,20 @@ async function readLoginData() {
   }
 }
 
+function LogInFile(stream, message) {
+  var today = new Date();
+  var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+  var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();  
+  var dateTime = date+' '+time;
 
+  if (fs.existsSync(logPath)) {
+    console.log(message);
+    console.log("✅ "+ dateTime + "Collected");
+    fs.appendFile(logPath, dateTime + " - " + stream + " : " + message + '\n', function(err) {});
+  } else {
+    console.log("❌ No log file found!");
+  }
+}
 
 async function spawnBrowser() {
   console.log("=========================");
@@ -311,7 +330,22 @@ async function clickWhenExist(page, query) {
   } catch (e) {}
 }
 
+async function chest(page, stream, interval) {
+  let coins = await queryOnWebsite(page, streamCoins);
+  let result = await queryOnWebsite(page, streamCoinsChestQuery);
+  coins = coins[0].childNodes[0].children[0].data;
 
+  try {
+    if (result[0].type == 'tag' && result[0].name == 'button') {
+      await page.click(streamCoinsChestQuery);
+      await page.waitFor(500);
+      interval = 240000;
+      LogInFile(stream, "clicked, coins = " + coins);
+    }
+  } catch (e) {}
+  await page.waitFor(interval);
+  await chest(page, stream, interval);
+}
 
 async function queryOnWebsite(page, query) {
   let bodyHTML = await page.evaluate(() => document.body.innerHTML);
@@ -357,7 +391,7 @@ async function main() {
     browser,
     page
   } = await spawnBrowser();
-  await getAllStreamer(page);
+  //await getAllStreamer(page);
   console.log("=========================");
   console.log('🔭 Running watcher...');
   await viewRandomPage(browser, page);

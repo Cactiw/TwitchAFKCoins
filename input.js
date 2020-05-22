@@ -22,6 +22,17 @@ exports.askLogin = () => {
         return 'Please enter your valid path!';
       }
     }
+  }, {
+    name: 'channel',
+    type: 'input',
+    message: 'Enter the channel name (same as in the url, can be changed in the config.json):',
+    validate: function(value) {
+      if (value.length) {
+        return true;
+      } else {
+        return 'Please enter a valid name!';
+      }
+    }
   }];
   return inquirer.prompt(questions);
 };
