@@ -32,7 +32,7 @@ const showBrowser = false; // false state equ headless mode;
 const proxy = (process.env.proxy || ""); // "ip:port" By https://github.com/Jan710
 const proxyAuth = (process.env.proxyAuth || "");
 
-const browserScreenshot = true;//(process.env.browserScreenshot || false);
+const browserScreenshot = false;//(process.env.browserScreenshot || false);
 
 const browserClean = 1;
 const browserCleanUnit = 'hour';
@@ -62,6 +62,7 @@ const streamQualitySettingQuery = '[data-a-target="player-settings-menu-item-qua
 const streamQualityQuery = 'input[data-a-target="tw-radio"]';
 const streamCoinsChestQuery = 'button[class="tw-button tw-button--success tw-interactive"]';
 const streamCoins = '[data-test-selector="balance-string"]';
+const subtemberCancel = 'div[class="tw-absolute tw-pd-1 tw-right-0 tw-top-0"] button'
 // ========================================== CONFIG SECTION =================================================================
 
 async function viewRandomPage(browser, page) {
@@ -77,10 +78,10 @@ async function viewRandomPage(browser, page) {
         browser_last_refresh = dayjs().add(browserClean, browserCleanUnit);
       }
 
-      if (dayjs(streamer_last_refresh).isBefore(dayjs())) {
-        await getAllStreamer(page); //Call getAllStreamer function and refresh the list
-        streamer_last_refresh = dayjs().add(streamerListRefresh, streamerListRefreshUnit); //https://github.com/D3vl0per/Valorant-watcher/issues/25
-      }
+      // if (dayjs(streamer_last_refresh).isBefore(dayjs())) {
+      //   await getAllStreamer(page); //Call getAllStreamer function and refresh the list
+      //   streamer_last_refresh = dayjs().add(streamerListRefresh, streamerListRefreshUnit); //https://github.com/D3vl0per/Valorant-watcher/issues/25
+      // }
 
       let watch = channel;//streamers[getRandomInt(0, streamers.length - 1)]; //https://github.com/D3vl0per/Valorant-watcher/issues/27
       var sleep = getRandomInt(minWatching, maxWatching) * 60000; //Set watching timer
@@ -96,6 +97,9 @@ async function viewRandomPage(browser, page) {
       await clickWhenExist(page, matureContentQuery); //Click on accept button
 
       if (firstRun) {
+        console.log('🔧 Closing subtember popup..');
+        await clickWhenExist(page, subtemberCancel);
+
         console.log('🔧 Setting lowest possible resolution..');
         await clickWhenExist(page, streamPauseQuery);
 
