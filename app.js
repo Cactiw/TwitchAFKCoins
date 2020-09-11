@@ -63,6 +63,8 @@ const streamQualityQuery = 'input[data-a-target="tw-radio"]';
 const streamCoinsChestQuery = 'button[class="tw-button tw-button--success tw-interactive"]';
 const streamCoins = '[data-test-selector="balance-string"]';
 const subtemberCancel = 'div[class="tw-absolute tw-pd-1 tw-right-0 tw-top-0"] button'
+const followButton = 'div[class="tw-border-radius-medium tw-c-background-accent-alt-2 tw-inline-flex tw-overflow-hidden"] button'
+const cancelFollowButton = 'div[class="tw-border-radius-medium tw-c-background-base tw-inline-flex tw-overflow-hidden"] button'
 // ========================================== CONFIG SECTION =================================================================
 
 async function viewRandomPage(browser, page) {
@@ -143,6 +145,10 @@ async function viewRandomPage(browser, page) {
       console.log('💡 Account status:', status[0] ? status[0].children[0].data : "Unknown");
       console.log('🕒 Time: ' + dayjs().format('HH:mm:ss'));
       console.log('💤 Watching stream for ' + sleep / 60000 + ' minutes\n');
+
+      console.log("Trying to follow...")
+      await clickWhenExist(page, followButton)
+      console.log("Check!")
 
       await chest(page, watch, 5000);
 
