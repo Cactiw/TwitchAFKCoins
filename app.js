@@ -336,7 +336,7 @@ async function sendToChat(page, word) {
   let result = await queryOnWebsite(page, chatTextArea)
 
   try {
-    console.log("Отправляю в чат")
+    console.log("Отправляю в чат " + word)
 
     let chatRules = await queryOnWebsite(page, chatRulesAccept)
     if ((chatRules[0] !== undefined) && chatRules[0].type == "tag" && chatRules[0].name == "button") {
