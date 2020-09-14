@@ -66,7 +66,7 @@ const subtemberCancel = 'div[class="tw-absolute tw-pd-1 tw-right-0 tw-top-0"] bu
 const followButton = 'div[class="tw-border-radius-medium tw-c-background-accent-alt-2 tw-inline-flex tw-overflow-hidden"] button'
 const cancelFollowButton = 'div[class="tw-border-radius-medium tw-c-background-base tw-inline-flex tw-overflow-hidden"] button'
 const chatTextArea = 'div[class="chat-input__textarea"] textarea'
-const chatRulesAccept = 'div[class="tw-pd-05"] button'
+const chatRulesAccept = 'button[class="tw-align-items-center tw-align-middle tw-border-bottom-left-radius-large tw-border-bottom-right-radius-large tw-border-top-left-radius-large tw-border-top-right-radius-large tw-core-button tw-core-button--large tw-core-button--primary tw-full-width tw-inline-flex tw-interactive tw-justify-content-center tw-overflow-hidden tw-relative"]'
 const chatRulesAcceptQuery = '[data-a-target="tw-core-button-label-text"]'
 // ========================================== CONFIG SECTION =================================================================
 
@@ -336,30 +336,27 @@ async function sendToChat(page, word) {
   let result = await queryOnWebsite(page, chatTextArea)
 
   try {
-    console.log("Отправляю в чат " + word)
-
-    let chatRules = await queryOnWebsite(page, chatRulesAccept)
-    if ((chatRules[0] !== undefined) && chatRules[0].type == "tag" && chatRules[0].name == "button") {
-      console.log("Accepting chat rules...")
-      await clickWhenExist(page, chatRulesAccept)
-      await page.waitFor(chatRulesAcceptQuery)
-      console.log("Chat rules accepted!")
-    }
-    let token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     if (result[0].type == 'tag' && result[0].name == "textarea") {
+      console.log("Отправляю в чат " + word)
       await page.click(chatTextArea)
-      let i = 0
-      await makeScreenshot(page, token + i)
-      for (let c of word) {
-        i += 1
-        await page.keyboard.press(c)
-        await page.waitFor(250)
-        await makeScreenshot(page, token + i)
+
+      let chatRules = await queryOnWebsite(page, chatRulesAccept)
+      if ((chatRules[0] !== undefined) && chatRules[0].type == "tag" && chatRules[0].name == "button") {
+        console.log("Accepting chat rules...")
+        await clickWhenExist(page, chatRulesAccept)
+        await page.waitFor(chatRulesAcceptQuery)
+        console.log("Chat rules accepted!")
+        await page.click(chatTextArea)
       }
+      let token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      await makeScreenshot(page, token + 1)
+      await page.keyboard.type(word)
+      await page.waitFor(2500)
+      await makeScreenshot(page, token + 2)
       console.log("Жму энтер")
-      await makeScreenshot(page, token + (i + 1))
+      await makeScreenshot(page, token + 3)
       await page.keyboard.press('Enter');
-      await makeScreenshot(page, token + (i + 2))
+      await makeScreenshot(page, token + 4)
       console.log("Отправил!")
     }
   } catch (e) {
