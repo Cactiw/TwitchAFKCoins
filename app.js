@@ -65,6 +65,9 @@ const streamCoins = '[data-test-selector="balance-string"]';
 const subtemberCancel = 'div[class="tw-absolute tw-pd-1 tw-right-0 tw-top-0"] button'
 const followButton = 'div[class="tw-border-radius-medium tw-c-background-accent-alt-2 tw-inline-flex tw-overflow-hidden"] button'
 const cancelFollowButton = 'div[class="tw-border-radius-medium tw-c-background-base tw-inline-flex tw-overflow-hidden"] button'
+const chatTextArea = 'div[class="chat-input__textarea"] textarea'
+const chatRulesAccept = 'div[class="tw-pd-05"] button'
+const chatRulesAcceptQuery = '[data-a-target="tw-core-button-label-text"]'
 // ========================================== CONFIG SECTION =================================================================
 
 async function viewRandomPage(browser, page) {
@@ -120,21 +123,10 @@ async function viewRandomPage(browser, page) {
         await clickWhenExist(page, streamPauseQuery);
 
         await page.keyboard.press('m'); //For unmute
+
+        await sendToChat(page, "Привет!")
+
         firstRun = false;
-      }
-
-
-      if (browserScreenshot) {
-        await page.waitFor(1000);
-        fs.access(screenshotFolder, error => {
-          if (error) {
-            fs.promises.mkdir(screenshotFolder);
-          }
-        });
-        await page.screenshot({
-          path: `${screenshotFolder}${watch}.png`
-        });
-        console.log('📸 Screenshot created: ' + `${watch}.png`);
       }
 
       await clickWhenExist(page, sidebarQuery); //Open sidebar
@@ -338,6 +330,54 @@ async function clickWhenExist(page, query) {
       return;
     }
   } catch (e) {}
+}
+
+async function sendToChat(page, word) {
+  let result = await queryOnWebsite(page, chatTextArea)
+
+  try {
+    console.log("Отправляю в чат")
+
+    let chatRules = await queryOnWebsite(page, chatRulesAccept)
+    if ((chatRules[0] !== undefined) && chatRules[0].type == "tag" && chatRules[0].name == "button") {
+      console.log("Accepting chat rules...")
+      await clickWhenExist(page, chatRulesAccept)
+      await page.waitFor(chatRulesAcceptQuery)
+      console.log("Chat rules accepted!")
+    }
+    let token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    if (result[0].type == 'tag' && result[0].name == "textarea") {
+      await page.click(chatTextArea)
+      let i = 0
+      await makeScreenshot(page, token + i)
+      for (let c of word) {
+        i += 1
+        await page.keyboard.press(c)
+        await page.waitFor(250)
+        await makeScreenshot(page, token + i)
+      }
+      console.log("Жму энтер")
+      await makeScreenshot(page, token + (i + 1))
+      await page.keyboard.press('Enter');
+      await makeScreenshot(page, token + (i + 2))
+      console.log("Отправил!")
+    }
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+async function makeScreenshot(page, name) {
+  await page.waitFor(1000);
+  fs.access(screenshotFolder, error => {
+    if (error) {
+      fs.promises.mkdir(screenshotFolder);
+    }
+  });
+  await page.screenshot({
+    path: `${screenshotFolder}${name}.png`
+  });
+  console.log('📸 Screenshot created: ' + `${name}.png`);
 }
 
 async function chest(page, stream, interval) {
