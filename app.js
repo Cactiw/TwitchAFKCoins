@@ -124,7 +124,7 @@ async function viewRandomPage(browser, page) {
 
         await page.keyboard.press('m'); //For unmute
 
-        await sendToChat(page, "Привет!")
+        // await sendToChat(page, "Привет!")
 
         firstRun = false;
       }
