@@ -62,6 +62,7 @@ const streamQualitySettingQuery = '[data-a-target="player-settings-menu-item-qua
 const streamQualityQuery = 'input[data-a-target="tw-radio"]';
 const streamCoinsChestQuery = 'button[class="tw-button tw-button--success tw-interactive"]';
 const streamCoins = '[data-test-selector="balance-string"]';
+const streamStatusQuery = 'div [class="0 tw-align-center tw-border-radius-medium tw-channel-status-text-indicator tw-channel-status-text-indicator--live tw-font-size-6 tw-inline-block"]'
 const subtemberCancel = 'div[class="tw-absolute tw-pd-1 tw-right-0 tw-top-0"] button'
 const followButton = 'div[class="tw-border-radius-medium tw-c-background-accent-alt-2 tw-inline-flex tw-overflow-hidden"] button'
 const cancelFollowButton = 'div[class="tw-border-radius-medium tw-c-background-base tw-inline-flex tw-overflow-hidden"] button'
@@ -83,11 +84,6 @@ async function viewRandomPage(browser, page) {
         browser_last_refresh = dayjs().add(browserClean, browserCleanUnit);
       }
 
-      // if (dayjs(streamer_last_refresh).isBefore(dayjs())) {
-      //   await getAllStreamer(page); //Call getAllStreamer function and refresh the list
-      //   streamer_last_refresh = dayjs().add(streamerListRefresh, streamerListRefreshUnit); //https://github.com/D3vl0per/Valorant-watcher/issues/25
-      // }
-
       let watch = channel;//streamers[getRandomInt(0, streamers.length - 1)]; //https://github.com/D3vl0per/Valorant-watcher/issues/27
       var sleep = getRandomInt(minWatching, maxWatching) * 60000; //Set watching timer
 
@@ -97,6 +93,14 @@ async function viewRandomPage(browser, page) {
       await page.goto(baseUrl + watch, {
         "waitUntil": "networkidle0"
       }); //https://github.com/puppeteer/puppeteer/blob/master/docs/api.md#pagegobackoptions
+
+      console.log('Checking stream status...')
+      if (await checkStreamOnline(page) === true) {
+        console.log('Stream online!')
+      } else {
+        console.log('Stream offline, exiting')
+        shutDown()
+      }
 
       await clickWhenExist(page, cookiePolicyQuery);
       await clickWhenExist(page, matureContentQuery); //Click on accept button
@@ -152,6 +156,15 @@ async function viewRandomPage(browser, page) {
   }
 }
 
+
+async function checkStreamOnline(page) {
+  try {
+    let streamStatus = await queryOnWebsite(page, streamStatusQuery)
+    return streamStatus[0].children[0].children[0].data === "LIVE"
+  } catch (e) {
+    return false
+  }
+}
 
 
 async function readLoginData() {
