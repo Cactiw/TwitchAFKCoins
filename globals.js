@@ -40,10 +40,12 @@ exports.browserClean = 1;
 exports.browserCleanUnit = 'hour';
 
 exports.cookie = null;
-exports.run = true;
+exports.run_monitor = true;
+exports.run_workers = true;
 exports.firstRun = true;
 exports.streamers = null;
 exports.channel = '';
+exports.tokens = []
 
 exports.cookiePolicyQuery = 'button[data-a-target="consent-banner-accept"]';
 exports.matureContentQuery = 'button[data-a-target="player-overlay-mature-accept"]';

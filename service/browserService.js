@@ -9,7 +9,10 @@ const inquirer = require('../input');
 const globals = require('../globals')
 
 
-async function spawnBrowser() {
+async function spawnBrowser(cookie) {
+    if (!cookie) {
+        cookie = globals.cookie
+    }
     console.log("=========================");
     console.log('📱 Launching browser...');
     let browser = await puppeteer.launch(globals.browserConfig);
@@ -19,7 +22,7 @@ async function spawnBrowser() {
     await page.setUserAgent(globals.userAgent); //Set userAgent
 
     console.log('🔧 Setting auth token...');
-    await page.setCookie(...globals.cookie); //Set cookie
+    await page.setCookie(...cookie); //Set cookie
 
     console.log('⏰ Setting timeouts...');
     await page.setDefaultNavigationTimeout(process.env.timeout || 0);
@@ -59,7 +62,8 @@ async function readLoginData() {
             let configFile = JSON.parse(fs.readFileSync(globals.configPath, 'utf8'));
             if (globals.proxy) globals.browserConfig.args.push('--proxy-server=' + proxy);
             globals.browserConfig.executablePath = configFile.exec;
-            cookie[0].value = configFile.token;
+            cookie[0].value = configFile.token || configFile.tokens[0];
+            globals.tokens = configFile.tokens
             globals.channel = configFile.channel;
 
             return cookie;
@@ -132,9 +136,11 @@ async function scroll(page, times) {
 
 
 async function cleanup(browser, page) {
-    const pages = await browser.pages();
-    await pages.map((page) => page.close());
-    await treekill(browser.process().pid, 'SIGKILL');
+    if (browser && page) {
+        const pages = await browser.pages();
+        await pages.map((page) => page.close());
+        await treekill(browser.process().pid, 'SIGKILL');
+    }
     //await browser.close();
     return await spawnBrowser();
 }
@@ -149,7 +155,7 @@ async function killBrowser(browser, page) {
 
 async function shutDown() {
     console.log("\n👋Bye Bye👋");
-    globals.run = false;
+    globals.run_workers = false;
     process.exit();
 }
 
