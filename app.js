@@ -1,152 +1,89 @@
 require('dotenv').config();
 require('fs.promises')
-const puppeteer = require('puppeteer-core');
 const dayjs = require('dayjs');
-const cheerio = require('cheerio');
-var fs = require('fs');
-const inquirer = require('./input');
-const treekill = require('tree-kill');
+const fs = require('fs');
 
-var run = true;
-var firstRun = true;
-var cookie = null;
-var streamers = null;
-// ========================================== CONFIG SECTION =================================================================
-const configPath = './config.json'
-const logPath = './logs.log'
-const screenshotFolder = './screenshots/';
-const baseUrl = 'https://www.twitch.tv/';
-const userAgent = (process.env.userAgent || 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36');
-const streamersUrl = (process.env.streamersUrl || 'https://www.twitch.tv/directory/game/VALORANT?tl=c2542d6d-cd10-4532-919b-3d19f30a768b');
+const twitchService = require("./service/twitchService")
+const browserService = require("./service/browserService")
+const globals = require("./globals")
 
-const scrollDelay = (Number(process.env.scrollDelay) || 2000);
-const scrollTimes = (Number(process.env.scrollTimes) || 5);
-
-const minWatching = (Number(process.env.minWatching) || 15); // Minutes
-const maxWatching = (Number(process.env.maxWatching) || 30); //Minutes
-
-const streamerListRefresh = (Number(process.env.streamerListRefresh) || 1);
-const streamerListRefreshUnit = (process.env.streamerListRefreshUnit || 'hour'); //https://day.js.org/docs/en/manipulate/add
-
-const showBrowser = false; // false state equ headless mode;
-const proxy = (process.env.proxy || ""); // "ip:port" By https://github.com/Jan710
-const proxyAuth = (process.env.proxyAuth || "");
-
-const browserScreenshot = false;//(process.env.browserScreenshot || false);
-
-const browserClean = 1;
-const browserCleanUnit = 'hour';
-
-var channel = '';
-var browserConfig = {
-  headless: !showBrowser,
-  args: [
-    '--disable-dev-shm-usage',
-    '--disable-accelerated-2d-canvas',
-    '--no-first-run',
-    '--no-zygote',
-    '--disable-gpu',
-    '--no-sandbox',
-    '--disable-setuid-sandbox'
-  ]
-}; //https://github.com/D3vl0per/Valorant-watcher/issues/24
-
-const cookiePolicyQuery = 'button[data-a-target="consent-banner-accept"]';
-const matureContentQuery = 'button[data-a-target="player-overlay-mature-accept"]';
-const sidebarQuery = '*[data-test-selector="user-menu__toggle"]';
-const userStatusQuery = 'span[data-a-target="presence-text"]';
-const channelsQuery = 'a[data-test-selector*="ChannelLink"]';
-const streamPauseQuery = 'button[data-a-target="player-play-pause-button"]';
-const streamSettingsQuery = '[data-a-target="player-settings-button"]';
-const streamQualitySettingQuery = '[data-a-target="player-settings-menu-item-quality"]';
-const streamQualityQuery = 'input[data-a-target="tw-radio"]';
-const streamCoinsChestQuery = 'button[class="tw-button tw-button--success tw-interactive"]';
-const streamCoins = '[data-test-selector="balance-string"]';
-const streamStatusQuery = 'div [class="0 tw-align-center tw-border-radius-medium tw-channel-status-text-indicator tw-channel-status-text-indicator--live tw-font-size-6 tw-inline-block"]'
-const subtemberCancel = 'div[class="tw-absolute tw-pd-1 tw-right-0 tw-top-0"] button'
-const followButton = 'div[class="tw-border-radius-medium tw-c-background-accent-alt-2 tw-inline-flex tw-overflow-hidden"] button'
-const cancelFollowButton = 'div[class="tw-border-radius-medium tw-c-background-base tw-inline-flex tw-overflow-hidden"] button'
-const chatTextArea = 'div[class="chat-input__textarea"] textarea'
-const chatRulesAccept = 'button[class="tw-align-items-center tw-align-middle tw-border-bottom-left-radius-large tw-border-bottom-right-radius-large tw-border-top-left-radius-large tw-border-top-right-radius-large tw-core-button tw-core-button--large tw-core-button--primary tw-full-width tw-inline-flex tw-interactive tw-justify-content-center tw-overflow-hidden tw-relative"]'
-const chatRulesAcceptQuery = '[data-a-target="tw-core-button-label-text"]'
-// ========================================== CONFIG SECTION =================================================================
 
 async function viewRandomPage(browser, page) {
-  var streamer_last_refresh = dayjs().add(streamerListRefresh, streamerListRefreshUnit);
-  var browser_last_refresh = dayjs().add(browserClean, browserCleanUnit);
-  while (run) {
+  let streamer_last_refresh = dayjs().add(globals.streamerListRefresh, globals.streamerListRefreshUnit);
+  let browser_last_refresh = dayjs().add(globals.browserClean, globals.browserCleanUnit);
+  while (globals.run) {
     try {
       if (dayjs(browser_last_refresh).isBefore(dayjs())) {
-        var newSpawn = await cleanup(browser, page);
+        let newSpawn = await browserService.cleanup(browser, page);
         browser = newSpawn.browser;
         page = newSpawn.page;
-        firstRun = true;
-        browser_last_refresh = dayjs().add(browserClean, browserCleanUnit);
+        globals.firstRun = true;
+        browser_last_refresh = dayjs().add(globals.browserClean, globals.browserCleanUnit);
       }
 
-      let watch = channel;//streamers[getRandomInt(0, streamers.length - 1)]; //https://github.com/D3vl0per/Valorant-watcher/issues/27
-      var sleep = getRandomInt(minWatching, maxWatching) * 60000; //Set watching timer
+      let watch = globals.channel;//streamers[getRandomInt(0, streamers.length - 1)]; //https://github.com/D3vl0per/Valorant-watcher/issues/27
+      let sleep = getRandomInt(globals.minWatching, globals.maxWatching) * 60000; //Set watching timer
 
-      console.log('\n🔗 Now watching streamer: ', baseUrl + watch);
+      console.log('\n🔗 Now watching streamer: ', globals.baseUrl + watch);
 
       await page.setViewport({ width: 1366, height: 768}); // to see the chat
-      await page.goto(baseUrl + watch, {
+      await page.goto(globals.baseUrl + watch, {
         "waitUntil": "networkidle0"
       }); //https://github.com/puppeteer/puppeteer/blob/master/docs/api.md#pagegobackoptions
 
       console.log('Checking stream status...')
-      if (await checkStreamOnline(page) === true) {
+      if (await twitchService.checkStreamOnline(page) === true) {
         console.log('Stream online!')
       } else {
         console.log('Stream offline, exiting')
-        shutDown()
+        await browserService.shutDown()
       }
 
-      await clickWhenExist(page, cookiePolicyQuery);
-      await clickWhenExist(page, matureContentQuery); //Click on accept button
+      await browserService.clickWhenExist(page, globals.cookiePolicyQuery);
+      await browserService.clickWhenExist(page, globals.matureContentQuery); //Click on accept button
 
-      if (firstRun) {
+      if (globals.firstRun) {
         console.log('🔧 Closing subtember popup..');
-        await clickWhenExist(page, subtemberCancel);
+        await browserService.clickWhenExist(page, globals.subtemberCancel);
 
         console.log('🔧 Setting lowest possible resolution..');
-        await clickWhenExist(page, streamPauseQuery);
+        await browserService.clickWhenExist(page, globals.streamPauseQuery);
 
-        await clickWhenExist(page, streamSettingsQuery);
-        await page.waitFor(streamQualitySettingQuery);
+        await browserService.clickWhenExist(page, globals.streamSettingsQuery);
+        await page.waitFor(globals.streamQualitySettingQuery);
 
-        await clickWhenExist(page, streamQualitySettingQuery);
-        await page.waitFor(streamQualityQuery);
+        await browserService.clickWhenExist(page, globals.streamQualitySettingQuery);
+        await page.waitFor(globals.streamQualityQuery);
 
-        var resolution = await queryOnWebsite(page, streamQualityQuery);
+        let resolution = await browserService.queryOnWebsite(page, globals.streamQualityQuery);
         resolution = resolution[resolution.length - 1].attribs.id;
         await page.evaluate((resolution) => {
           document.getElementById(resolution).click();
         }, resolution);
 
-        await clickWhenExist(page, streamPauseQuery);
+        await browserService.clickWhenExist(page, globals.streamPauseQuery);
 
         await page.keyboard.press('m'); //For unmute
 
         // await sendToChat(page, "Привет!")
 
-        firstRun = false;
+        globals.firstRun = false;
       }
 
-      await clickWhenExist(page, sidebarQuery); //Open sidebar
-      await page.waitFor(userStatusQuery); //Waiting for sidebar
-      let status = await queryOnWebsite(page, userStatusQuery); //status jQuery
-      await clickWhenExist(page, sidebarQuery); //Close sidebar
+      await browserService.clickWhenExist(page, globals.sidebarQuery); //Open sidebar
+      await page.waitFor(globals.userStatusQuery); //Waiting for sidebar
+      let status = await browserService.queryOnWebsite(page, globals.userStatusQuery); //status jQuery
+      await browserService.clickWhenExist(page, globals.sidebarQuery); //Close sidebar
 
       console.log('💡 Account status:', status[0] ? status[0].children[0].data : "Unknown");
       console.log('🕒 Time: ' + dayjs().format('HH:mm:ss'));
       console.log('💤 Watching stream for ' + sleep / 60000 + ' minutes\n');
 
       console.log("Trying to follow...")
-      await clickWhenExist(page, followButton)
+      await browserService.clickWhenExist(page, globals.followButton)
       console.log("Check!")
 
-      await chest(page, watch, 5000);
+      await twitchService.chest(page, watch, 5000);
 
       await page.waitFor(sleep);
     } catch (e) {
@@ -157,172 +94,20 @@ async function viewRandomPage(browser, page) {
 }
 
 
-async function checkStreamOnline(page) {
-  try {
-    let streamStatus = await queryOnWebsite(page, streamStatusQuery)
-    return streamStatus[0].children[0].children[0].data === "LIVE"
-  } catch (e) {
-    return false
-  }
-}
-
-
-async function readLoginData() {
-  const cookie = [{
-    "domain": ".twitch.tv",
-    "hostOnly": false,
-    "httpOnly": false,
-    "name": "auth-token",
-    "path": "/",
-    "sameSite": "no_restriction",
-    "secure": true,
-    "session": false,
-    "storeId": "0",
-    "id": 1
-  }];
-  try {
-    console.log('🔎 Checking config file...');
-
-    if (fs.existsSync(configPath)) {
-      console.log('✅ Json config found!');
-      let configFile = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-      if (proxy) browserConfig.args.push('--proxy-server=' + proxy);
-      browserConfig.executablePath = configFile.exec;
-      cookie[0].value = configFile.token;
-      channel = configFile.channel;
-
-      return cookie;
-    } else if (process.env.token) {
-      console.log('✅ Env config found');
-
-      if (proxy) browserConfig.args.push('--proxy-server=' + proxy);
-      cookie[0].value = process.env.token; //Set cookie from env
-      browserConfig.executablePath = '/usr/bin/chromium-browser'; //For docker container
-
-      return cookie;
-    } else {
-      console.log('❌ No config file found!');
-
-      let input = await inquirer.askLogin();
-
-      fs.writeFile(configPath, JSON.stringify(input), function(err) {
-        if (err) {
-          console.log(err);
-        }
-      });
-
-      if (proxy) browserConfig.args[6] = '--proxy-server=' + proxy;
-      browserConfig.executablePath = input.exec;
-      cookie[0].value = input.token;
-      stream = input.channel;
-
-      return cookie;
-    }
-  } catch (err) {
-    console.log('🤬 Error: ', e);
-    console.log('Please visit my discord channel to solve this problem: https://discord.gg/s8AH4aZ');
-  }
-}
-
 function LogInFile(stream, message) {
-  var today = new Date();
-  var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
-  var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();  
-  var dateTime = date+' '+time;
+  let today = new Date();
+  let date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+  let time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+  let dateTime = date+' '+time;
 
-  if (fs.existsSync(logPath)) {
+  if (fs.existsSync(globals.logPath)) {
     console.log(message);
     console.log("✅ "+ dateTime + "Collected");
-    fs.appendFile(logPath, dateTime + " - " + stream + " : " + message + '\n', function(err) {});
+    fs.appendFile(globals.logPath, dateTime + " - " + stream + " : " + message + '\n', function(err) {});
   } else {
     console.log("❌ No log file found!");
   }
 }
-
-async function spawnBrowser() {
-  console.log("=========================");
-  console.log('📱 Launching browser...');
-  var browser = await puppeteer.launch(browserConfig);
-  var page = await browser.newPage();
-
-  console.log('🔧 Setting User-Agent...');
-  await page.setUserAgent(userAgent); //Set userAgent
-
-  console.log('🔧 Setting auth token...');
-  await page.setCookie(...cookie); //Set cookie
-
-  console.log('⏰ Setting timeouts...');
-  await page.setDefaultNavigationTimeout(process.env.timeout || 0);
-  await page.setDefaultTimeout(process.env.timeout || 0);
-
-  if (proxyAuth) {
-    await page.setExtraHTTPHeaders({
-      'Proxy-Authorization': 'Basic ' + Buffer.from(proxyAuth).toString('base64')
-    })
-  }
-
-  return {
-    browser,
-    page
-  };
-}
-
-
-
-async function getAllStreamer(page) {
-  console.log("=========================");
-  await page.goto(streamersUrl, {
-    "waitUntil": "networkidle0"
-  });
-  console.log('🔐 Checking login...');
-  await checkLogin(page);
-  console.log('📡 Checking active streamers...');
-  await scroll(page, scrollTimes);
-  const jquery = await queryOnWebsite(page, channelsQuery);
-  streamers = null;
-  streamers = new Array();
-
-  console.log('🧹 Filtering out html codes...');
-  for (var i = 0; i < jquery.length; i++) {
-    streamers[i] = jquery[i].attribs.href.split("/")[1];
-  }
-  return;
-}
-
-
-
-async function checkLogin(page) {
-  let cookieSetByServer = await page.cookies();
-  for (var i = 0; i < cookieSetByServer.length; i++) {
-    if (cookieSetByServer[i].name == 'twilight-user') {
-      console.log('✅ Login successful!');
-      return true;
-    }
-  }
-  console.log('🛑 Login failed!');
-  console.log('🔑 Invalid token!');
-  console.log('\nPleas ensure that you have a valid twitch auth-token.\nhttps://github.com/D3vl0per/Valorant-watcher#how-token-does-it-look-like');
-  if (!process.env.token) {
-    fs.unlinkSync(configPath);
-  }
-  process.exit();
-}
-
-
-
-async function scroll(page, times) {
-  console.log('🔨 Emulating scrolling...');
-
-  for (var i = 0; i < times; i++) {
-    await page.evaluate(async (page) => {
-      var x = document.getElementsByClassName("scrollable-trigger__wrapper");
-      x[0].scrollIntoView();
-    });
-    await page.waitFor(scrollDelay);
-  }
-  return;
-}
-
 
 
 function getRandomInt(min, max) {
@@ -332,132 +117,21 @@ function getRandomInt(min, max) {
 }
 
 
-
-async function clickWhenExist(page, query) {
-  let result = await queryOnWebsite(page, query);
-
-  try {
-    if (result[0].type == 'tag' && result[0].name == 'button') {
-      await page.click(query);
-      await page.waitFor(500);
-      return;
-    }
-  } catch (e) {}
-}
-
-async function sendToChat(page, word) {
-  let result = await queryOnWebsite(page, chatTextArea)
-
-  try {
-    if (result[0].type == 'tag' && result[0].name == "textarea") {
-      console.log("Отправляю в чат " + word)
-      await page.click(chatTextArea)
-
-      let chatRules = await queryOnWebsite(page, chatRulesAccept)
-      if ((chatRules[0] !== undefined) && chatRules[0].type == "tag" && chatRules[0].name == "button") {
-        console.log("Accepting chat rules...")
-        await clickWhenExist(page, chatRulesAccept)
-        await page.waitFor(chatRulesAcceptQuery)
-        console.log("Chat rules accepted!")
-        await page.click(chatTextArea)
-      }
-      let token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      await makeScreenshot(page, token + 1)
-      await page.keyboard.type(word)
-      await page.waitFor(2500)
-      await makeScreenshot(page, token + 2)
-      console.log("Жму энтер")
-      await makeScreenshot(page, token + 3)
-      await page.keyboard.press('Enter');
-      await makeScreenshot(page, token + 4)
-      console.log("Отправил!")
-    }
-  } catch (e) {
-    console.error(e)
-  }
-}
-
-async function makeScreenshot(page, name) {
-  await page.waitFor(1000);
-  fs.access(screenshotFolder, error => {
-    if (error) {
-      fs.promises.mkdir(screenshotFolder);
-    }
-  });
-  await page.screenshot({
-    path: `${screenshotFolder}${name}.png`
-  });
-  console.log('📸 Screenshot created: ' + `${name}.png`);
-}
-
-async function chest(page, stream, interval) {
-  let coins = await queryOnWebsite(page, streamCoins);
-  let result = await queryOnWebsite(page, streamCoinsChestQuery);
-  coins = coins[0].childNodes[0].children[0].data;
-
-  try {
-    if (result[0].type == 'tag' && result[0].name == 'button') {
-      await page.click(streamCoinsChestQuery);
-      await page.waitFor(500);
-      interval = 240000;
-      LogInFile(stream, "clicked, coins = " + coins);
-    }
-  } catch (e) {}
-  await page.waitFor(interval);
-  await chest(page, stream, interval);
-}
-
-async function queryOnWebsite(page, query) {
-  let bodyHTML = await page.evaluate(() => document.body.innerHTML);
-  let $ = cheerio.load(bodyHTML);
-  const jquery = $(query);
-  return jquery;
-}
-
-
-
-async function cleanup(browser, page) {
-  const pages = await browser.pages();
-  await pages.map((page) => page.close());
-  await treekill(browser.process().pid, 'SIGKILL');
-  //await browser.close();
-  return await spawnBrowser();
-}
-
-
-
-async function killBrowser(browser, page) {
-  const pages = await browser.pages();
-  await pages.map((page) => page.close());
-  treekill(browser.process().pid, 'SIGKILL');
-  return;
-}
-
-
-
-async function shutDown() {
-  console.log("\n👋Bye Bye👋");
-  run = false;
-  process.exit();
-}
-
-
-
 async function main() {
   console.clear();
   console.log("=========================");
-  cookie = await readLoginData();
-  var {
+  globals.cookie = await browserService.readLoginData();
+  let {
     browser,
     page
-  } = await spawnBrowser();
+  } = await browserService.spawnBrowser();
   //await getAllStreamer(page);
   console.log("=========================");
   console.log('🔭 Running watcher...');
   await viewRandomPage(browser, page);
-};
+}
 
 main();
 
-process.on("SIGINT", shutDown);
-process.on("SIGTERM", shutDown);
+process.on("SIGINT", browserService.shutDown);
+process.on("SIGTERM", browserService.shutDown);
