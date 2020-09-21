@@ -98,8 +98,8 @@ async function watchStream(browser, page) {
 }
 
 
-const delayMin = 5
-const delayInterval = 10
+const delayMin = 1
+const delayInterval = 15
 
 async function startStreamWatching(token) {
     const cookie = JSON.parse(JSON.stringify(globals.cookie))
