@@ -82,6 +82,7 @@ async function watchStream(browser, page) {
                 await page.waitFor(globals.userStatusQuery, {timeout: 10000}); //Waiting for sidebar
             } catch (e) {
                 console.log("Did not received userStatusQuery")
+                await browserService.makeScreenshot(page, "ERROR" + generate_token())
                 throw e
             }
             let status = await browserService.queryOnWebsite(page, globals.userStatusQuery); //status jQuery
@@ -180,7 +181,7 @@ async function sendToChat(page, word) {
                 console.log("Chat rules accepted!")
                 await page.click(globals.chatTextArea)
             }
-            let token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            let token = generate_token()
             await browserService.makeScreenshot(page, token + 1)
             await page.keyboard.type(word)
             await page.waitFor(2500)
@@ -265,6 +266,10 @@ function randomChoice(arr) {
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function generate_token() {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
 
 function openJsonFile(path) {
