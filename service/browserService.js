@@ -65,7 +65,10 @@ async function readLoginData() {
             cookie[0].value = configFile.token || configFile.tokens[0];
             globals.tokens = configFile.tokens
             globals.channel = configFile.channel;
-            globals.greeting = configFile.greeting
+
+            if (typeof(configFile.greeting) != 'undefined' && configFile.greeting != null) {
+                globals.greeting = configFile.greeting
+            }
 
             return cookie;
         } else if (process.env.token) {
