@@ -95,6 +95,9 @@ async function watchStream(browser, page) {
 
             await page.waitFor(sleep);
         } catch (e) {
+            if (e instanceof TimeoutError) {
+                throw e
+            }
             console.log('🤬 Error: ', e);
             console.log('Please visit the discord channel to receive help: https://discord.gg/s8AH4aZ');
         }
