@@ -142,8 +142,10 @@ async function startStreamWatching(token) {
             if (e instanceof streamError.StreamEndedError) {
                 console.log("Exiting - stream ended")
                 return
-            } else if (e instanceof streamError.TwitchLoginError) +
+            } else if (e instanceof streamError.TwitchLoginError) {
                 console.error("Wrong token, can not login: " + token)
+                return
+            }
             console.error("Error during watching stream, relaunching:", e.toString())
         }
         await sleep(1000)
