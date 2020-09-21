@@ -130,7 +130,8 @@ async function endStreamWatching() {
 async function checkStreamOnline(page) {
     try {
         let streamStatus = await browserService.queryOnWebsite(page, globals.streamStatusQuery)
-        console.log(streamStatus)
+        console.log(streamStatus, "=================")
+        console.log(streamStatus[0].children[0].children[0])
         return streamStatus[0].children[0].children[0].data === "LIVE"
     } catch (e) {
         console.error(e)
