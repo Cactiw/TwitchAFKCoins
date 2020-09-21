@@ -3,6 +3,7 @@ module.exports = {
     name: 'TwitchBooster',
     script: 'app.js',
     log_file: 'TwitchBooster.log',
+    time: true,
     kill_timeout: 5000,
 
     instances: 1,
