@@ -27,7 +27,7 @@ async function monitorStreamStatus(browser, page) {
       } else {
         console.log("✅Stream appeared online! Launching all!")
         online = true
-        let res = Promise.allSettled(globals.tokens.map(twitchService.startStreamWatching))
+        let res = await Promise.allSettled(globals.tokens.map(twitchService.startStreamWatching))
       }
     } else {
       if (online) {
