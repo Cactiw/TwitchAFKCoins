@@ -83,7 +83,7 @@ async function watchStream(browser, page) {
             } catch (e) {
                 console.log("Did not received userStatusQuery")
                 await browserService.makeScreenshot(page, "ERROR" + generate_token())
-                throw e
+                throw new streamError.TwitchLoginError("Wrong login")
             }
             let status = await browserService.queryOnWebsite(page, globals.userStatusQuery); //status jQuery
             await browserService.clickWhenExist(page, globals.sidebarQuery); //Close sidebar
@@ -96,7 +96,7 @@ async function watchStream(browser, page) {
 
             await page.waitFor(sleep);
         } catch (e) {
-            if (e instanceof TimeoutError) {
+            if (e instanceof streamError.TwitchLoginError) {
                 throw e
             }
             console.log('🤬 Error: ', e);
@@ -137,12 +137,13 @@ async function startStreamWatching(token) {
     while (true) {
         try {
             let {browser, page} = await browserService.spawnBrowser(cookie)
-            await watchStream(browser, page)
+            await watchStream(browser, page, token)
         } catch (e) {
             if (e instanceof streamError.StreamEndedError) {
                 console.log("Exiting - stream ended")
                 return
-            }
+            } else if (e instanceof streamError.TwitchLoginError) +
+                console.error("Wrong token, can not login: " + token)
             console.error("Error during watching stream, relaunching:", e.toString())
         }
         await sleep(1000)
