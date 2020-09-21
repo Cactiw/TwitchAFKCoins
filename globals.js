@@ -24,6 +24,7 @@ exports.scrollDelay = (Number(process.env.scrollDelay) || 2000);
 exports.scrollTimes = (Number(process.env.scrollTimes) || 5);
 
 exports.configPath = './config.json'
+exports.resourcesPath = './resources.json'
 exports.logPath = './logs.log'
 exports.screenshotFolder = './screenshots/';
 exports.baseUrl = 'https://www.twitch.tv/';
@@ -38,6 +39,8 @@ exports.streamerListRefreshUnit = (process.env.streamerListRefreshUnit || 'hour'
 
 exports.browserClean = 1;
 exports.browserCleanUnit = 'hour';
+
+exports.greeting = true
 
 exports.cookie = null;
 exports.run_monitor = true;

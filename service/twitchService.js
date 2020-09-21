@@ -70,7 +70,10 @@ async function watchStream(browser, page) {
                 await browserService.clickWhenExist(page, globals.followButton)
                 console.log("Check!")
 
-                // await sendToChat(page, "Привет!")
+                if (globals.greeting) {
+                    console.log("Greeting, streamer!")
+                    await sendToChat(page, randomChoice(openJsonFile(globals.resourcesPath).greetings))
+                }
 
                 globals.firstRun = false;
             }
@@ -231,8 +234,16 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function randomChoice(arr) {
+    return arr[Math.floor(arr.length * Math.random())];
+}
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function openJsonFile(path) {
+    return JSON.parse(fs.readFileSync(path, 'utf8'));
 }
 
 module.exports = {
@@ -243,5 +254,6 @@ module.exports = {
     'getAllStreamer': getAllStreamer,
     'watchStream': watchStream,
     'startStreamWatching': startStreamWatching,
-    'sleep': sleep
+    'sleep': sleep,
+    'randomChoice': randomChoice
 }
