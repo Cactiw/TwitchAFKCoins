@@ -9,6 +9,7 @@ const globals = require("../globals")
 
 
 async function watchStream(browser, page) {
+    let firstRun = true
     console.log("Watching stream!")
     let streamer_last_refresh = dayjs().add(globals.streamerListRefresh, globals.streamerListRefreshUnit);
     let browser_last_refresh = dayjs().add(globals.browserClean, globals.browserCleanUnit);
@@ -43,7 +44,7 @@ async function watchStream(browser, page) {
             await browserService.clickWhenExist(page, globals.cookiePolicyQuery);
             await browserService.clickWhenExist(page, globals.matureContentQuery); //Click on accept button
 
-            if (globals.firstRun) {
+            if (firstRun) {
                 console.log('🔧 Closing subtember popup..');
                 await browserService.clickWhenExist(page, globals.subtemberCancel);
 
@@ -66,20 +67,23 @@ async function watchStream(browser, page) {
 
                 await page.keyboard.press('m'); //For unmute
 
-                console.log("Trying to follow...")
-                await browserService.clickWhenExist(page, globals.followButton)
-                console.log("Check!")
-
                 if (globals.greeting) {
                     console.log("Greeting, streamer!")
                     await sendToChat(page, randomChoice(openJsonFile(globals.resourcesPath).greetings))
                 }
 
-                globals.firstRun = false;
+                await tryFollow(browser, page)
+
+                firstRun = false;
             }
 
             await browserService.clickWhenExist(page, globals.sidebarQuery); //Open sidebar
-            await page.waitFor(globals.userStatusQuery); //Waiting for sidebar
+            try {
+                await page.waitFor(globals.userStatusQuery, {timeout: 10000}); //Waiting for sidebar
+            } catch (e) {
+                console.log("Did not received userStatusQuery")
+                throw e
+            }
             let status = await browserService.queryOnWebsite(page, globals.userStatusQuery); //status jQuery
             await browserService.clickWhenExist(page, globals.sidebarQuery); //Close sidebar
 
@@ -98,6 +102,24 @@ async function watchStream(browser, page) {
 }
 
 
+async function tryFollow(browser, page) {
+    console.log("Trying to follow...")
+    let result = await browserService.queryOnWebsite(page, globals.followButton);
+
+    if ((result[0] !== undefined) &&result[0].type == 'tag' && result[0].name == 'button') {
+        console.log("Not followed, following!")
+        if (!globals.greeting) {
+            await sendToChat(page, randomChoice(openJsonFile(globals.resourcesPath).greetings))
+            await page.waitFor(1000)
+        }
+        await page.click(globals.followButton);
+        await page.waitFor(500);
+        console.log("Check!")
+        return;
+    }
+}
+
+
 const delayMin = 5
 const delayInterval = 20
 
@@ -107,7 +129,7 @@ async function startStreamWatching(token) {
 
     let waitBefore = (Math.random() * delayInterval + delayMin)
     console.log(`Launching stream worker after ${waitBefore} minutes`)
-    await sleep(waitBefore * 1000 * 60)
+    await sleep(waitBefore * 1000)// * 60)  todo return
     while (true) {
         try {
             let {browser, page} = await browserService.spawnBrowser(cookie)
