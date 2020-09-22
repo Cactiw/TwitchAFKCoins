@@ -167,7 +167,7 @@ async function checkStreamOnline(page) {
         try {
             console.log("Stream is ", streamStatus[0].children[0].children[0].data, " ",
                 streamOtherStatus[0].children[0].children[0].data)
-            if (["Hosting", "РЕТРАНСЛИРУЕТСЯ"].includes(streamOtherStatus[0].children[0].children[0].data)) {
+            if (["Hosting", "Ретранслируется"].includes(streamOtherStatus[0].children[0].children[0].data)) {
                 return false
             }
         } catch (e) {}
