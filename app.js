@@ -77,7 +77,9 @@ async function main() {
   await monitorStreamStatus(browser, page);
 }
 
-main();
 
 process.on("SIGINT", browserService.shutDown);
 process.on("SIGTERM", browserService.shutDown);
+process.on('warning', e => console.warn(e.stack));
+
+await main();
