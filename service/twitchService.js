@@ -161,9 +161,19 @@ async function endStreamWatching() {
 
 async function checkStreamOnline(page) {
     try {
+
         let streamStatus = await browserService.queryOnWebsite(page, globals.streamStatusQuery)
+        let streamOtherStatus = await browserService.queryOnWebsite(page,globals.streamOtherStatusQuery)
+        try {
+            console.log("Stream is ", streamStatus[0].children[0].children[0].data, " ",
+                streamOtherStatus[0].children[0].children[0].data)
+            if (["Hosting", "РЕТРАНСЛИРУЕТСЯ"].includes(streamOtherStatus[0].children[0].children[0].data)) {
+                return false
+            }
+        } catch (e) {}
         return ["LIVE", "В ЭФИРЕ"].includes(streamStatus[0].children[0].children[0].data)
     } catch (e) {
+        console.error(e)
         return false
     }
 }
