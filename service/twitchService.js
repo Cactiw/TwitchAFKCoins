@@ -133,7 +133,7 @@ async function startStreamWatching(token) {
 
     let waitBefore = (Math.random() * delayInterval + delayMin)
     console.log(`Launching stream worker after ${waitBefore} minutes`)
-    await sleep(waitBefore * 1000)// * 60)  todo return
+    await sleep(waitBefore * 1000 * 60)
     while (true) {
         try {
             let {browser, page} = await browserService.spawnBrowser(cookie)
