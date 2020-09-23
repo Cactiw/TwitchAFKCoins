@@ -96,6 +96,7 @@ async function watchStream(browser, page) {
 
             console.log("Sleeping for + ", sleep / 60000, " minutes")
             await page.waitFor(sleep);
+            console.log("End of the sleep")
         } catch (e) {
             if (e instanceof streamError.TwitchLoginError) {
                 throw e
