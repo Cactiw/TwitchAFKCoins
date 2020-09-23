@@ -94,6 +94,7 @@ async function watchStream(browser, page) {
 
             await chest(page, watch, 5000);
 
+            console.log("Sleeping for + ", sleep / 60000, " minutes")
             await page.waitFor(sleep);
         } catch (e) {
             if (e instanceof streamError.TwitchLoginError) {
@@ -133,7 +134,7 @@ async function startStreamWatching(token) {
 
     let waitBefore = (Math.random() * delayInterval + delayMin)
     console.log(`Launching stream worker after ${waitBefore} minutes`)
-    await sleep(waitBefore * 1000 * 60)
+    await sleep(waitBefore) // * 1000 * 60)  TODO RETURN
     while (true) {
         try {
             let {browser, page} = await browserService.spawnBrowser(cookie)
