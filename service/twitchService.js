@@ -10,6 +10,7 @@ const globals = require("../globals")
 
 async function watchStream(browser, page) {
     let firstRun = true
+    let chestTimerId
     console.log("Watching stream!")
     let streamer_last_refresh = dayjs().add(globals.streamerListRefresh, globals.streamerListRefreshUnit);
     let browser_last_refresh = dayjs().add(globals.browserClean, globals.browserCleanUnit);
@@ -92,13 +93,21 @@ async function watchStream(browser, page) {
             console.log('🕒 Time: ' + dayjs().format('HH:mm:ss'));
             console.log('💤 Watching stream for ' + sleep / 60000 + ' minutes\n');
 
-            await chest(page, watch, 5000);
+            chestTimerId = setInterval(chest, 5000, page, watch)
 
             console.log("Sleeping for + ", sleep / 60000, " minutes")
             await page.waitFor(sleep);
             console.log("End of the sleep")
         } catch (e) {
+            if (chestTimerId !== undefined) {
+                clearInterval(chestTimerId)
+                chestTimerId = undefined
+            }
+
             if (e instanceof streamError.TwitchLoginError) {
+                throw e
+            }
+            if (e instanceof streamError.StreamError) {
                 throw e
             }
             console.log('🤬 Error: ', e);
@@ -216,18 +225,14 @@ async function chest(page, stream, interval) {
     let coins = await browserService.queryOnWebsite(page, globals.streamCoins);
     let result = await browserService.queryOnWebsite(page, globals.streamCoinsChestQuery);
     coins = coins[0].childNodes[0].children[0].data;
-
     try {
         if (result[0].type == 'tag' && result[0].name == 'button') {
             await page.click(globals.streamCoinsChestQuery);
             await page.waitFor(500);
-            interval = 240000;
             // LogInFile(stream, "clicked, coins = " + coins);
         }
     } catch (e) {
     }
-    await page.waitFor(interval);
-    await chest(page, stream, interval);
 }
 
 
