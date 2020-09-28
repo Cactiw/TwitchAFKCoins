@@ -224,13 +224,8 @@ async function sendToChat(page, word) {
 async function chest(page, stream, interval) {
     try {
         let coins = await browserService.queryOnWebsite(page, globals.streamCoins);
-    } catch (e) {
-        console.error(e)
-        return
-    }
-    let result = await browserService.queryOnWebsite(page, globals.streamCoinsChestQuery);
-    coins = coins[0].childNodes[0].children[0].data;
-    try {
+        let result = await browserService.queryOnWebsite(page, globals.streamCoinsChestQuery);
+        coins = coins[0].childNodes[0].children[0].data;
         if (result[0].type == 'tag' && result[0].name == 'button') {
             await page.click(globals.streamCoinsChestQuery);
             await page.waitFor(500);
