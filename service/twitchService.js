@@ -175,6 +175,13 @@ async function checkStreamOnline(page) {
 
         let streamStatus = await browserService.queryOnWebsite(page, globals.streamStatusQuery)
         let streamOtherStatus = await browserService.queryOnWebsite(page,globals.streamOtherStatusQuery)
+        let streamOfflineStatus = await browserService.queryOnWebsite(page, globals.streamOfflineStatusQuery)
+        try {
+            if (streamOfflineStatus[0] !== undefined) {
+                console.log("Stream offline!")
+                return false
+            }
+        } catch (e) { }
         try {
             console.log("Stream is ", streamStatus[0].children[0].children[0].data, " ",
                 streamOtherStatus[0].children[0].children[0].data)

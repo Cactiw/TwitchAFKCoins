@@ -62,6 +62,7 @@ exports.streamQualityQuery = 'input[data-a-target="tw-radio"]';
 exports.streamCoinsChestQuery = 'button[class="tw-button tw-button--success tw-interactive"]';
 exports.streamCoins = '[data-test-selector="balance-string"]';
 exports.streamStatusQuery = 'div [class="0 tw-align-center tw-border-radius-medium tw-channel-status-text-indicator tw-channel-status-text-indicator--live tw-font-size-6 tw-inline-block"]'
+exports.streamOfflineStatusQuery = 'div[class="channel-status-info channel-status-info--offline tw-border-radius-medium tw-inline-block"]'
 exports.streamOtherStatusQuery = 'div[class="channel-status-info channel-status-info--hosting tw-border-radius-medium tw-inline-block"]'
 exports.subtemberCancel = 'div[class="tw-absolute tw-pd-1 tw-right-0 tw-top-0"] button'
 exports.followButton = 'div[class="tw-border-radius-medium tw-c-background-accent-alt-2 tw-inline-flex tw-overflow-hidden"] button'
