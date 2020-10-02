@@ -141,16 +141,20 @@ async function scroll(page, times) {
 
 async function cleanup(browser, page) {
     if (browser && page) {
-        const pages = await browser.pages();
-        await pages.map((page) => page.close());
-        await treekill(browser.process().pid, 'SIGKILL');
+        try {
+            const pages = await browser.pages();
+            await pages.map((page) => page.close());
+            await treekill(browser.process().pid, 'SIGKILL');
+        } catch (e) {
+            console.error("Can not close browser: ", e)
+        }
     }
     //await browser.close();
     return await spawnBrowser();
 }
 
 
-async function killBrowser(browser, page) {
+async function killBrowser(browser) {
     const pages = await browser.pages();
     await pages.map((page) => page.close());
     treekill(browser.process().pid, 'SIGKILL');

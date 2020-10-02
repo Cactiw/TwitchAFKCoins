@@ -112,6 +112,7 @@ async function watchStream(browser, page) {
             }
             console.log('🤬 Error: ', e);
             console.log('Please visit the discord channel to receive help: https://discord.gg/s8AH4aZ');
+            await browserService.killBrowser(browser)
         }
     }
 }
@@ -150,6 +151,7 @@ async function startStreamWatching(token) {
             let {browser, page} = await browserService.spawnBrowser(cookie)
             await watchStream(browser, page, token)
         } catch (e) {
+            await browserService.killBrowser(browser)
             if (e instanceof streamError.StreamEndedError) {
                 console.log("Exiting - stream ended")
                 return
