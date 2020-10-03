@@ -330,6 +330,7 @@ function openJsonFile(path) {
 
 module.exports = {
     'checkStreamOnline': checkStreamOnline,
+    'checkStreamOnlineClean': checkStreamOnlineClean,
     'sendToChat': sendToChat,
     'chest': chest,
     'checkLogin': checkLogin,
