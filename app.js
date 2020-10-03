@@ -53,6 +53,14 @@ function LogInFile(stream, message) {
 
 
 async function main() {
+  process.on('unhandledRejection', function(err, promise) {
+    console.error('Unhandled rejection (promise: ', promise, ', reason: ', err, ').');
+  });
+
+  process.on("SIGINT", browserService.shutDown);
+  process.on("SIGTERM", browserService.shutDown);
+  process.on('warning', e => console.warn(e.stack));
+
   console.clear();
   console.log("=========================");
   globals.cookie = await browserService.readLoginData();
@@ -66,11 +74,6 @@ async function main() {
   console.log('🔭 Running monitor...');
   await monitorStreamStatus();
 }
-
-
-process.on("SIGINT", browserService.shutDown);
-process.on("SIGTERM", browserService.shutDown);
-process.on('warning', e => console.warn(e.stack));
 
 main();
 
