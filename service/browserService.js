@@ -18,13 +18,13 @@ async function spawnBrowser(cookie) {
     let browser = await puppeteer.launch(globals.browserConfig);
     let page = await browser.newPage();
 
-    console.log('🔧 Setting User-Agent...');
+    // console.log('🔧 Setting User-Agent...');
     await page.setUserAgent(globals.userAgent); //Set userAgent
 
-    console.log('🔧 Setting auth token...');
+    // console.log('🔧 Setting auth token...');
     await page.setCookie(...cookie); //Set cookie
 
-    console.log('⏰ Setting timeouts...');
+    // console.log('⏰ Setting timeouts...');
     await page.setDefaultNavigationTimeout(process.env.timeout || 0);
     await page.setDefaultTimeout(process.env.timeout || 0);
 
