@@ -151,6 +151,7 @@ async function startStreamWatching(token) {
         try {
             let {browser, page} = await browserService.spawnBrowser(cookie)
             await watchStream(browser, page, token)
+            await browserService.killBrowser(browser)
         } catch (e) {
             await browserService.killBrowser(browser)
             if (e instanceof streamError.StreamEndedError) {
