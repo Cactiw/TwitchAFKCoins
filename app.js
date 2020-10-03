@@ -13,8 +13,8 @@ async function monitorStreamStatus() {
   let online = false
   while (globals.run_monitor) {
     console.log('\n🔗 Now checking status of the streamer: ', globals.baseUrl + globals.channel);
-
-    if (await twitchService.checkStreamOnlineClean() === true) {
+    let streamOnline = await twitchService.checkStreamOnlineClean()
+    if (streamOnline === true) {
       if (online) {
         console.log("Stream is still running")
       } else {
