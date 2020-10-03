@@ -9,19 +9,12 @@ const globals = require("./globals")
 
 const checkInterval = 5 * 1000 * 60
 
-async function monitorStreamStatus(browser, page) {
+async function monitorStreamStatus() {
   let online = false
   while (globals.run_monitor) {
     console.log('\n🔗 Now checking status of the streamer: ', globals.baseUrl + globals.channel);
 
-    await page.setViewport({ width: 1366, height: 768}); // to see the chat
-    await page.goto(globals.baseUrl + globals.channel, {
-      "waitUntil": "networkidle0"
-    });
-    await browserService.clickWhenExist(page, globals.cookiePolicyQuery);
-    await browserService.clickWhenExist(page, globals.matureContentQuery); //Click on accept button
-
-    if (await twitchService.checkStreamOnline(page) === true) {
+    if (await twitchService.checkStreamOnlineClean() === true) {
       if (online) {
         console.log("Stream is still running")
       } else {
@@ -38,10 +31,6 @@ async function monitorStreamStatus(browser, page) {
         console.log("Stream is still offline")
       }
     }
-
-    let newBrowser = await browserService.cleanup(browser, page);
-    browser = newBrowser.browser
-    page = newBrowser.page
     await twitchService.sleep(checkInterval)
   }
 }
@@ -67,14 +56,15 @@ async function main() {
   console.clear();
   console.log("=========================");
   globals.cookie = await browserService.readLoginData();
-  let {
-    browser,
-    page
-  } = await browserService.spawnBrowser();
+
+  if (process.argv.includes("--debug")) {
+    await twitchService.startStreamWatching(globals.tokens[0])
+    return
+  }
   //await getAllStreamer(page);
   console.log("=========================");
   console.log('🔭 Running monitor...');
-  await monitorStreamStatus(browser, page);
+  await monitorStreamStatus();
 }
 
 

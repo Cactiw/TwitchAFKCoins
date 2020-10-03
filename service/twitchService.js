@@ -147,6 +147,7 @@ async function startStreamWatching(token) {
     console.log(`Launching stream worker after ${waitBefore} minutes`)
     await sleep(waitBefore * 1000 * 60)
     while (true) {
+        let {browser, page} = await browserService.spawnBrowser(cookie)
         try {
             let {browser, page} = await browserService.spawnBrowser(cookie)
             await watchStream(browser, page, token)
@@ -169,6 +170,27 @@ async function startStreamWatching(token) {
 async function endStreamWatching() {
     console.log("\n👋Exiting worker👋");
     throw new streamError.StreamEndedError();
+}
+
+
+async function checkStreamOnlineClean() {
+    let {
+        browser,
+        page
+    } = await browserService.spawnBrowser();
+
+    await page.setViewport({ width: 1366, height: 768}); // to see the chat
+    await page.goto(globals.baseUrl + globals.channel, {
+        "waitUntil": "networkidle0"
+    });
+    await page.waitFor(5000)
+    await browserService.clickWhenExist(page, globals.cookiePolicyQuery);
+    await browserService.clickWhenExist(page, globals.matureContentQuery); //Click on accept button
+
+    let result = await checkStreamOnline(page)
+    await browserService.killBrowser(browser)
+
+    return result
 }
 
 
