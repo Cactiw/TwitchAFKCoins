@@ -12,17 +12,12 @@ async function watchStream(browser, page) {
     let firstRun = true
     let chestTimerId
     console.log("Watching stream!")
-    let streamer_last_refresh = dayjs().add(globals.streamerListRefresh, globals.streamerListRefreshUnit);
-    let browser_last_refresh = dayjs().add(globals.browserClean, globals.browserCleanUnit);
     while (globals.run_workers) {
         try {
-            if (dayjs(browser_last_refresh).isBefore(dayjs())) {
-                let newSpawn = await browserService.cleanup(browser, page);
-                browser = newSpawn.browser;
-                page = newSpawn.page;
-                globals.firstRun = true;
-                browser_last_refresh = dayjs().add(globals.browserClean, globals.browserCleanUnit);
-            }
+            let newSpawn = await browserService.cleanup(browser, page);
+            browser = newSpawn.browser;
+            page = newSpawn.page;
+            globals.firstRun = true;
 
             let watch = globals.channel;//streamers[getRandomInt(0, streamers.length - 1)]; //https://github.com/D3vl0per/Valorant-watcher/issues/27
             let sleep = getRandomInt(globals.minWatching, globals.maxWatching) * 60000; //Set watching timer
@@ -104,6 +99,8 @@ async function watchStream(browser, page) {
                 chestTimerId = undefined
             }
 
+            await browserService.killBrowser(browser)
+
             if (e instanceof streamError.TwitchLoginError) {
                 throw e
             }
@@ -149,11 +146,9 @@ async function startStreamWatching(token) {
     while (true) {
         let {browser, page} = await browserService.spawnBrowser(cookie)
         try {
-            let {browser, page} = await browserService.spawnBrowser(cookie)
             await watchStream(browser, page, token)
             await browserService.killBrowser(browser)
         } catch (e) {
-            await browserService.killBrowser(browser)
             if (e instanceof streamError.StreamEndedError) {
                 console.log("Exiting - stream ended")
                 return
