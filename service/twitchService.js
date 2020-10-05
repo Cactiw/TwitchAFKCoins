@@ -188,6 +188,10 @@ async function checkStreamOnlineClean() {
     await browserService.clickWhenExist(page, globals.matureContentQuery); //Click on accept button
 
     let result = await checkStreamOnline(page)
+    if (result) {
+        await browserService.makeScreenshot(page, "STREAM ONLINE" + generate_token())
+    }
+
     await browserService.killBrowser(browser)
 
     return result
