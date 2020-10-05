@@ -99,6 +99,10 @@ async function watchStream(browser, page) {
                 chestTimerId = undefined
             }
 
+            if (e instanceof streamError.TwitchLoginError) {
+                await browserService.makeScreenshot(page, "LOGIN ERROR" + generate_token())
+            }
+
             await browserService.killBrowser(browser)
 
             if (e instanceof streamError.TwitchLoginError) {
