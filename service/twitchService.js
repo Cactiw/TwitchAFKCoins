@@ -41,6 +41,9 @@ async function watchStream(browser, page) {
             await browserService.clickWhenExist(page, globals.matureContentQuery); //Click on accept button
 
             if (firstRun) {
+                console.log('🔧 Closing KPop popup..');
+                await browserService.clickWhenExist(page, globals.kPopClose)
+
                 console.log('🔧 Closing subtember popup..');
                 await browserService.clickWhenExist(page, globals.subtemberCancel);
 
