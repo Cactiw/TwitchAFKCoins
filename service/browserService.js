@@ -139,7 +139,7 @@ async function scroll(page, times) {
 }
 
 
-async function cleanup(browser, page) {
+async function cleanup(browser, page, cookie) {
     if (browser && page) {
         try {
             const pages = await browser.pages();
@@ -150,7 +150,7 @@ async function cleanup(browser, page) {
         }
     }
     //await browser.close();
-    return await spawnBrowser();
+    return await spawnBrowser(cookie);
 }
 
 

@@ -8,16 +8,17 @@ const streamError = require('../model/errors/streamError')
 const globals = require("../globals")
 
 
-async function watchStream(browser, page) {
+async function watchStream(browser, page, cookie) {
     let firstRun = true
     let chestTimerId
     console.log("Watching stream!")
     while (globals.run_workers) {
         try {
-            let newSpawn = await browserService.cleanup(browser, page);
+            let newSpawn = await browserService.cleanup(browser, page, cookie);
             browser = newSpawn.browser;
             page = newSpawn.page;
             globals.firstRun = true;
+            
 
             let watch = globals.channel;//streamers[getRandomInt(0, streamers.length - 1)]; //https://github.com/D3vl0per/Valorant-watcher/issues/27
             // let sleep = getRandomInt(globals.minWatching, globals.maxWatching) * 60000; //Set watching timer
@@ -157,7 +158,7 @@ async function startStreamWatching(token) {
     while (true) {
         let {browser, page} = await browserService.spawnBrowser(cookie)
         try {
-            await watchStream(browser, page, token)
+            await watchStream(browser, page, cookie)
             await browserService.killBrowser(browser)
         } catch (e) {
             if (e instanceof streamError.StreamEndedError) {
