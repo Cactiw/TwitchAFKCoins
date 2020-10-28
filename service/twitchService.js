@@ -20,7 +20,8 @@ async function watchStream(browser, page) {
             globals.firstRun = true;
 
             let watch = globals.channel;//streamers[getRandomInt(0, streamers.length - 1)]; //https://github.com/D3vl0per/Valorant-watcher/issues/27
-            let sleep = getRandomInt(globals.minWatching, globals.maxWatching) * 60000; //Set watching timer
+            // let sleep = getRandomInt(globals.minWatching, globals.maxWatching) * 60000; //Set watching timer
+            let sleep = Math.random() * 60000 * (globals.maxWatching - globals.minWatching) + globals.minWatching * 60000; //Set watching timer
 
             console.log('\n🔗 Now watching streamer: ', globals.baseUrl + watch);
 
