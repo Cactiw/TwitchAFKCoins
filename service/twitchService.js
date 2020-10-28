@@ -140,7 +140,7 @@ async function tryFollow(browser, page) {
         console.log("Check!")
         return;
     } else {
-        await browserService.makeScreenshot(page, "Already followed " + generate_token())
+        // await browserService.makeScreenshot(page, "Already followed " + generate_token())
     }
 }
 
