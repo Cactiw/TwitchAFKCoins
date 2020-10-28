@@ -138,6 +138,8 @@ async function tryFollow(browser, page) {
         await page.waitFor(500);
         console.log("Check!")
         return;
+    } else {
+        await browserService.makeScreenshot(page, "Already followed " + generate_token())
     }
 }
 
