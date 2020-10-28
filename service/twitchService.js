@@ -125,6 +125,7 @@ async function watchStream(browser, page, cookie) {
 
 
 async function tryFollow(browser, page) {
+    return
     console.log("Trying to follow...")
     let result = await browserService.queryOnWebsite(page, globals.followButton);
     // console.log(result)
