@@ -67,7 +67,7 @@ exports.streamOtherStatusQuery = 'div[class="channel-status-info channel-status-
 exports.subtemberCancel = 'div[class="tw-absolute tw-pd-1 tw-right-0 tw-top-0"] button'
 exports.kPopClose = 'button[class="tw-align-items-center tw-align-middle tw-border-bottom-left-radius-small tw-border-bottom-right-radius-small tw-border-top-left-radius-small tw-border-top-right-radius-small tw-button-icon tw-button-icon--secondary tw-button-icon--small tw-core-button tw-core-button--small tw-inline-flex tw-interactive tw-justify-content-center tw-overflow-hidden tw-relative"]'
 // exports.followButton = 'div[class="tw-border-radius-medium tw-c-background-accent-alt-2 tw-inline-flex tw-overflow-hidden"] button'
-exports.followButton = 'button[class="tw-align-items-center tw-align-middle tw-border-bottom-left-radius-medium tw-border-bottom-right-radius-medium tw-border-top-left-radius-medium tw-border-top-right-radius-medium tw-core-button tw-core-button--primary tw-full-width tw-inline-flex tw-interactive tw-justify-content-center tw-overflow-hidden tw-relative"]'
+exports.followButton = 'button[data-a-target="follow-button"]'
 exports.cancelFollowButton = 'div[class="tw-border-radius-medium tw-c-background-base tw-inline-flex tw-overflow-hidden"] button'
 exports.chatTextArea = 'div[class="chat-input__textarea"] textarea'
 exports.chatRulesAccept = 'button[class="tw-align-items-center tw-align-middle tw-border-bottom-left-radius-large tw-border-bottom-right-radius-large tw-border-top-left-radius-large tw-border-top-right-radius-large tw-core-button tw-core-button--large tw-core-button--primary tw-full-width tw-inline-flex tw-interactive tw-justify-content-center tw-overflow-hidden tw-relative"]'
