@@ -125,8 +125,9 @@ async function watchStream(browser, page) {
 async function tryFollow(browser, page) {
     console.log("Trying to follow...")
     let result = await browserService.queryOnWebsite(page, globals.followButton);
+    console.log(result)
 
-    if ((result[0] !== undefined) &&result[0].type == 'tag' && result[0].name == 'button') {
+    if ((result[0] !== undefined) && result[0].type == 'tag' && result[0].name == 'button') {
         console.log("Not followed, following!")
         if (!globals.greeting) {
             await sendToChat(page, randomChoice(openJsonFile(globals.resourcesPath).greetings))
