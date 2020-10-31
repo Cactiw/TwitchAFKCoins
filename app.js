@@ -21,7 +21,7 @@ async function monitorStreamStatus() {
         console.log("✅Stream appeared online! Launching all!")
         online = true
         globals.run_workers = true
-        let res = await Promise.allSettled(globals.tokens.map(twitchService.startStreamWatching))
+        let res = await Promise.allSettled(globals.accounts.map(twitchService.startStreamWatching))
       }
     } else {
       if (online) {
@@ -64,10 +64,10 @@ async function main() {
 
   console.clear();
   console.log("=========================");
-  globals.cookie = await browserService.readLoginData();
+  await browserService.readLoginData();
 
   if (process.argv.includes("--debug")) {
-    await twitchService.startStreamWatching(globals.tokens[0])
+    await twitchService.startStreamWatching(globals.accounts[0])
     return
   }
   //await getAllStreamer(page);

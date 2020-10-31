@@ -62,14 +62,15 @@ async function readLoginData() {
             let configFile = JSON.parse(fs.readFileSync(globals.configPath, 'utf8'));
             if (globals.proxy) globals.browserConfig.args.push('--proxy-server=' + proxy);
             globals.browserConfig.executablePath = configFile.exec;
-            cookie[0].value = configFile.token || configFile.tokens[0];
-            globals.tokens = configFile.tokens
+            cookie[0].value = configFile.token || configFile.accounts[0]["token"];
+            globals.accounts = configFile.accounts;
             globals.channel = configFile.channel;
 
             if (typeof(configFile.greeting) != 'undefined' && configFile.greeting != null) {
                 globals.greeting = configFile.greeting
             }
 
+            globals.cookie = cookie
             return cookie;
         } else if (process.env.token) {
             console.log('✅ Env config found');

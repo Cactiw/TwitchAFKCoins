@@ -25,6 +25,7 @@ exports.scrollTimes = (Number(process.env.scrollTimes) || 5);
 
 exports.configPath = './config.json'
 exports.resourcesPath = './resources.json'
+exports.storagePath = './storage/'
 exports.logPath = './logs.log'
 exports.screenshotFolder = './screenshots/';
 exports.baseUrl = 'https://www.twitch.tv/';
@@ -48,7 +49,7 @@ exports.run_workers = true;
 exports.firstRun = true;
 exports.streamers = null;
 exports.channel = '';
-exports.tokens = []
+exports.accounts = {}
 
 exports.cookiePolicyQuery = 'button[data-a-target="consent-banner-accept"]';
 exports.matureContentQuery = 'button[data-a-target="player-overlay-mature-accept"]';

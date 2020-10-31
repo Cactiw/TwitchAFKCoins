@@ -6,15 +6,16 @@ const browserService = require('./browserService')
 const streamError = require('../model/errors/streamError')
 
 const globals = require("../globals")
+const User = require("../model/User")
 
 
-async function watchStream(browser, page, cookie) {
+async function watchStream(browser, page, user) {
     let firstRun = true
     let chestTimerId
     console.log("Watching stream!")
     while (globals.run_workers) {
         try {
-            let newSpawn = await browserService.cleanup(browser, page, cookie);
+            let newSpawn = await browserService.cleanup(browser, page, user.generateCookie());
             browser = newSpawn.browser;
             page = newSpawn.page;
             globals.firstRun = true;
@@ -49,7 +50,6 @@ async function watchStream(browser, page, cookie) {
                 console.log('🔧 Closing subtember popup..');
                 await browserService.clickWhenExist(page, globals.subtemberCancel);
 
-                console.log('🔧 Setting lowest possible resolution..');
                 await browserService.clickWhenExist(page, globals.streamPauseQuery);
 
                 await browserService.clickWhenExist(page, globals.streamSettingsQuery);
@@ -69,8 +69,14 @@ async function watchStream(browser, page, cookie) {
                 await page.keyboard.press('m'); //For unmute
 
                 if (globals.greeting) {
-                    console.log("Greeting, streamer!")
-                    await sendToChat(page, randomChoice(openJsonFile(globals.resourcesPath).greetings))
+                    if (user.checkGreeting()) {
+                        console.log("Greeting, streamer!")
+                        await sendToChat(page, randomChoice(openJsonFile(globals.resourcesPath).greetings))
+                        user.setGreeted()
+                        console.log("Greeted.")
+                    } else {
+                        console.log("Streamer already greeted!")
+                    }
                 }
 
                 await tryFollow(browser, page)
@@ -118,7 +124,6 @@ async function watchStream(browser, page, cookie) {
             }
             console.log('🤬 Error: ', e);
             console.log('Please visit the discord channel to receive help: https://discord.gg/s8AH4aZ');
-            await browserService.killBrowser(browser)
         }
     }
 }
@@ -149,17 +154,16 @@ async function tryFollow(browser, page) {
 const delayMin = 5
 const delayInterval = 20
 
-async function startStreamWatching(token) {
-    const cookie = JSON.parse(JSON.stringify(globals.cookie))
-    cookie[0].value = token
-
+async function startStreamWatching(account) {
+    let user = new User.User(account.username, account.token)
     let waitBefore = (Math.random() * delayInterval + delayMin)
     console.log(`Launching stream worker after ${waitBefore} minutes`)
-    await sleep(waitBefore * 1000 * 60)
+    // TODO RETURN
+    // await sleep(waitBefore * 1000) // * 60)  TODO RETURN
     while (true) {
-        let {browser, page} = await browserService.spawnBrowser(cookie)
+        let {browser, page} = await browserService.spawnBrowser(user.generateCookie())
         try {
-            await watchStream(browser, page, cookie)
+            await watchStream(browser, page, user)
             await browserService.killBrowser(browser)
         } catch (e) {
             if (e instanceof streamError.StreamEndedError) {
