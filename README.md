@@ -4,6 +4,8 @@
 
 > **Project forked and based on [this repository](https://github.com/D3vl0per/Valorant-watcher)**
 
+> **Further work takes place in a private repository.**
+
 AutoCollet coins without being on the stream ! \
 **Work without any window open.**
 
